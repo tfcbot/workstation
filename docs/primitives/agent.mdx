@@ -1,0 +1,51 @@
+---
+title: "Agent"
+description: "Run an autonomous LLM loop that drives the sandbox to achieve a goal."
+---
+
+The **Agent** capability is an autonomous LLM loop layered on top of the [Computer](/primitives/computer)
+primitive. You give it a natural-language `goal`; it plans, writes code, runs that code in your
+account's persistent sandbox, observes the result, and iterates until the goal is met — then returns
+a summary.
+
+The model is given exactly one tool: `runCode`. Each `runCode` call runs agent-authored code in your
+sandbox with the `workstation` SDK pre-installed and pre-authed (the same seam as
+`POST /v1/sandbox/run-with-sdk`). The code can `import { createClient } from "workstation"` and call
+any Workstation capability — all billed to your account.
+
+```http
+POST /v1/agent
+{ "goal": "fetch example.com and save the title to title.txt", "maxSteps": 10 }
+```
+
+Returns:
+
+```json
+{ "output": "Saved the page title to title.txt.", "steps": 3 }
+```
+
+- `goal` (required) — the objective, in natural language.
+- `maxSteps` (optional, default 10, hard cap 25) — maximum LLM round-trips. Each step may run one
+  sandbox snippet.
+
+## Billing
+
+`POST /v1/agent` charges a flat **50-credit orchestration fee** up front. Separately, **each sandbox
+run the loop triggers is metered at 15 credits** (the `sandboxRunWithSdk` cost), and any SDK calls
+that code makes back into the gateway (e.g. `fsWrite`) are metered at their own per-op cost. These
+are intentionally distinct charges.
+
+If you don't need the LLM planning loop, call [`POST /v1/sandbox/run-with-sdk`](/api-reference)
+directly for 15 credits per run and skip the 50-credit orchestration fee.
+
+## Configuration
+
+The loop uses the Vercel AI Gateway (Google provider, `gemini-2.0-flash`). Set on your deployment:
+
+```bash
+bunx convex env set AI_GATEWAY_API_KEY <your-key>
+# optional override of the default Google gateway endpoint:
+bunx convex env set AI_GATEWAY_BASE_URL https://ai-gateway.vercel.sh/v1/google
+```
+
+See the [API Reference](/api-reference) for full schemas.

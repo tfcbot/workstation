@@ -42,8 +42,8 @@ const authz: Middleware = {
     // Recursion guard: a session key (the one injected into the sandbox) MUST NOT spawn another
     // SDK-injected sandbox — otherwise agent code could nest sandboxes without bound. It may call
     // every other op (that's the whole point); just not this one.
-    if (r.account.isSession && r.opId === "sandboxRunWithSdk") {
-      r.response = forbidden("session keys cannot start a nested SDK sandbox");
+    if (r.account.isSession && (r.opId === "sandboxRunWithSdk" || r.opId === "agentRun")) {
+      r.response = forbidden("session keys cannot start a nested SDK sandbox or agent run");
       return;
     }
     if (!scopeAllows(r.account.scopes, r.op)) {

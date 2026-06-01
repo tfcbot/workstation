@@ -94,8 +94,14 @@ export class VercelSandbox implements SandboxPort {
       { path: "agent_main.mjs", content: Buffer.from(input.code) },
     ]);
 
-    // Inject auth via env on the command line (single-quoted; keys/URLs contain no quotes).
-    const cmd = `WORKSTATION_API_KEY='${apiKey}' WORKSTATION_API_URL='${apiUrl}' node agent_main.mjs`;
+    // Inject auth via env on the command line. JSON.stringify yields a safely double-quoted,
+    // escaped token so an operator-set apiUrl containing shell-special chars (quotes, $, etc.)
+    // can't break out of the command.
+    const cmd = [
+      `WORKSTATION_API_KEY=${JSON.stringify(apiKey)}`,
+      `WORKSTATION_API_URL=${JSON.stringify(apiUrl)}`,
+      "node agent_main.mjs",
+    ].join(" ");
     const r = await sbx.runCommand("sh", ["-c", cmd]);
     const [stdout, stderr] = await Promise.all([r.stdout(), r.stderr()]);
     return { stdout: stdout ?? "", stderr: stderr ?? "", exitCode: r.exitCode ?? 0 };
