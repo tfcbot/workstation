@@ -11,6 +11,7 @@ export interface Account {
   spentCents: number;
   label: string;
   scopes: string[];
+  isSession: boolean; // true when resolved via a session key (aliased to a real account)
 }
 
 export function json(body: unknown, status = 200): Response {
@@ -81,11 +82,34 @@ export async function resolveAccount(ctx: ActionCtx, req: Request): Promise<Acco
   if (!acct) {
     return json({ error: "auth_required", message: "Invalid API key." }, 401);
   }
+
+  // Session key (e.g. injected into the sandbox): it holds no balance of its own — it bills the
+  // account named by `aliasOf`. Honor its TTL, then resolve through to the real account so all
+  // metering hits the caller; keep the session key's (narrower) scopes + flag it as a session.
+  if (acct.aliasOf) {
+    if (acct.expiresAt && acct.expiresAt < Date.now()) {
+      return json({ error: "auth_required", message: "Session key expired." }, 401);
+    }
+    const real = await ctx.runQuery(api.accounts.getByAccountId, { accountId: acct.aliasOf });
+    if (!real) {
+      return json({ error: "auth_required", message: "Invalid API key." }, 401);
+    }
+    return {
+      accountId: real.accountId,
+      creditsCents: real.creditsCents,
+      spentCents: real.spentCents,
+      label: real.label ?? "",
+      scopes: acct.scopes ?? [],
+      isSession: true,
+    };
+  }
+
   return {
     accountId: acct.accountId,
     creditsCents: acct.creditsCents,
     spentCents: acct.spentCents,
     label: acct.label ?? "",
     scopes: acct.scopes ?? [],
+    isSession: false,
   };
 }

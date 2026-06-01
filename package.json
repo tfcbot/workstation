@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.core.json",
     "test": "bun test",
     "generate": "bun scripts/gen-openapi.ts",
+    "build:sdk-bundle": "bun scripts/bundle-sdk.ts",
     "build:packages": "turbo run build",
     "web": "cd apps/web && bun run dev",
     "web:build": "cd apps/web && bun run build"

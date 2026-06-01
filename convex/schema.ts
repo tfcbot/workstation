@@ -10,6 +10,11 @@ export default defineSchema({
     spentCents: v.number(),
     label: v.string(),
     scopes: v.array(v.string()), // reserved for operator-defined permissions; Workstation does not act on it
+    // Session keys: a short-lived key whose row carries `aliasOf` (the real account it bills) and
+    // `expiresAt`. resolveAccount follows the alias so the session key shares the caller's balance.
+    // Injected into the sandbox so the SDK's calls meter against the caller. Absent on normal keys.
+    aliasOf: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
