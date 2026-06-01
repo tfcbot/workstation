@@ -39,7 +39,8 @@
             "group": "Reference capabilities",
             "pages": [
               "primitives/computer",
-              "primitives/storage"
+              "primitives/storage",
+              "primitives/agent"
             ]
           }
         ]
@@ -64,7 +65,8 @@
               "POST /v1/sandbox/exec",
               "PUT /v1/sandbox/files",
               "GET /v1/sandbox/files",
-              "POST /v1/sandbox/dispose"
+              "POST /v1/sandbox/dispose",
+              "POST /v1/sandbox/run-with-sdk"
             ]
           },
           {
@@ -74,6 +76,12 @@
               "GET /v1/fs/objects",
               "GET /v1/fs/list",
               "GET /v1/fs/public-url"
+            ]
+          },
+          {
+            "group": "Agent",
+            "pages": [
+              "POST /v1/agent"
             ]
           }
         ],

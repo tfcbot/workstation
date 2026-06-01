@@ -19,11 +19,14 @@
     "typecheck": "tsc --noEmit -p tsconfig.core.json",
     "test": "bun test",
     "generate": "bun scripts/gen-openapi.ts",
+    "build:sdk-bundle": "bun scripts/bundle-sdk.ts",
     "build:packages": "turbo run build",
     "web": "cd apps/web && bun run dev",
     "web:build": "cd apps/web && bun run build"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.0.0",
+    "ai": "^4.0.0",
     "@aws-sdk/client-s3": "^3.1053.0",
     "@vercel/sandbox": "^2.0.1",
     "convex": "^1.31.0",

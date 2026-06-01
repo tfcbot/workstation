@@ -705,6 +705,68 @@
         }
       }
     },
+    "/v1/sandbox/run-with-sdk": {
+      "post": {
+        "summary": "Run code in the sandbox with the Workstation SDK pre-injected and auto-authed",
+        "operationId": "sandboxRunWithSdk",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stdout": {
+                      "type": "string"
+                    },
+                    "stderr": {
+                      "type": "string"
+                    },
+                    "exitCode": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "stdout",
+                    "stderr",
+                    "exitCode"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment Required (metered key out of credits)"
+          },
+          "429": {
+            "description": "Too Many Requests (rate limited)"
+          }
+        }
+      }
+    },
     "/v1/fs/objects": {
       "put": {
         "summary": "Write an object to storage",
@@ -1894,6 +1956,70 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/agent": {
+      "post": {
+        "summary": "Run an autonomous agent loop that drives the sandbox to achieve a goal (50-credit orchestration fee; each sandbox run it triggers is metered separately)",
+        "operationId": "agentRun",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "goal": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "maxSteps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 25
+                  }
+                },
+                "required": [
+                  "goal"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "steps": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "output",
+                    "steps"
+                  ]
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment Required (metered key out of credits)"
+          },
+          "429": {
+            "description": "Too Many Requests (rate limited)"
           }
         }
       }

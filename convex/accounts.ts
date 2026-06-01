@@ -47,6 +47,42 @@ export const getByApiKeyHash = query({
       .unique(),
 });
 
+export const getByAccountId = query({
+  args: { accountId: v.string() },
+  handler: async (ctx, { accountId }) =>
+    await ctx.db
+      .query("accounts")
+      .withIndex("by_accountId", (q) => q.eq("accountId", accountId))
+      .unique(),
+});
+
+/**
+ * Mint a short-lived SESSION key that bills the caller's account (`aliasOf`). It holds no balance
+ * of its own; resolveAccount follows the alias to the real account. Injected into the sandbox so
+ * agent-written SDK code authenticates and meters as the caller. Returns the plaintext key once.
+ */
+export const mintSessionKey = mutation({
+  args: { aliasOf: v.string(), scopes: v.optional(v.array(v.string())), ttlMs: v.optional(v.number()) },
+  handler: async (ctx, { aliasOf, scopes, ttlMs }) => {
+    const apiKey = generateApiKey();
+    const apiKeyHash = await sha256hex(apiKey);
+    const now = Date.now();
+    await ctx.db.insert("accounts", {
+      accountId: newAccountId(), // own id; balance is the aliased account's
+      apiKeyHash,
+      creditsCents: 0,
+      spentCents: 0,
+      label: "session",
+      scopes: scopes ?? [],
+      aliasOf,
+      expiresAt: now + (ttlMs ?? 10 * 60_000),
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { apiKey };
+  },
+});
+
 export const getBalance = query({
   args: { accountId: v.string() },
   handler: async (ctx, { accountId }) => {

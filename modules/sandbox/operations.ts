@@ -10,6 +10,8 @@ const getIn = z.object({ path: z.string() });
 const getOut = z.object({ data: Base64.nullable() });
 const empty = z.object({});
 const ok = z.object({ ok: z.boolean() });
+// Run agent-authored code in the sandbox with the Workstation SDK pre-injected + auto-authed.
+const runIn = z.object({ code: z.string() });
 
 export const ops = {
   sandboxExec: op({ method: "POST", path: "/v1/sandbox/exec", inputFrom: "body",
@@ -24,6 +26,14 @@ export const ops = {
   sandboxDispose: op({ method: "POST", path: "/v1/sandbox/dispose", inputFrom: "body",
     input: empty, output: ok, costCents: 0, summary: "Suspend/destroy the sandbox VM",
     serve: { port: "sandbox", method: "dispose" } }),
+  // The headline primitive: run code in the sandbox with the `workstation` SDK pre-installed and
+  // pre-authed (a scoped session key aliased to the caller's account is injected). The code can
+  // `import { createClient } from "workstation"` and call ANY contract operation — one tool that
+  // exposes the whole product surface. Each SDK call back to the gateway is itself metered.
+  sandboxRunWithSdk: op({ method: "POST", path: "/v1/sandbox/run-with-sdk", inputFrom: "body",
+    input: runIn, output: execOut, costCents: 15,
+    summary: "Run code in the sandbox with the Workstation SDK pre-injected and auto-authed",
+    serve: { port: "sandbox", method: "runWithSdk" } }),
 };
 
 export interface SandboxPort {
@@ -31,4 +41,13 @@ export interface SandboxPort {
   putFile(input: z.infer<typeof putIn>): Promise<z.infer<typeof putOut>>;
   getFile(input: z.infer<typeof getIn>): Promise<z.infer<typeof getOut>>;
   dispose(input: z.infer<typeof empty>): Promise<z.infer<typeof ok>>;
+  runWithSdk(input: z.infer<typeof runIn>): Promise<z.infer<typeof execOut>>;
+}
+
+// Dependencies the host injects into stateful adapters at dispatch time (the adapter is otherwise
+// pure). `mintSessionKey` returns a scoped, short-lived bearer key aliased to the CALLER's account,
+// so SDK calls the sandbox makes meter against the caller. `apiUrl` is the stable gateway base URL.
+export interface SandboxDeps {
+  mintSessionKey?: (scopes: string[]) => Promise<string>;
+  apiUrl?: string;
 }
