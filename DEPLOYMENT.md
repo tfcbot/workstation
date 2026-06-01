@@ -123,12 +123,32 @@ No CORS config is needed — uploads are server-side from Convex actions; public
 API calls, so it needs no client secrets and no proxy.
 
 1. **vercel.com → New Project → Import** the repo.
-2. **Root Directory = `apps/web`** ← required for the monorepo (framework auto-detects Next.js). If
-   install fails on workspace deps, enable *"Include files outside the root directory"*.
-3. **Environment variables: none.**
-4. **Deploy** → note the URL (e.g. `https://<project>.vercel.app`).
-5. Point Stripe redirects + the 402 CTA at it (step 2): set `WORKSTATION_BASE_URL` on dev + prod.
-6. **Do NOT** add a `vercel.json` rewrite to `*.convex.site`. Clients hit Convex directly.
+2. **Root Directory = `apps/web`** ← required for the monorepo (framework auto-detects Next.js).
+3. **⚠️ Monorepo + Turbo build gotcha — commit a `vercel.json`.** With a root `turbo.json`, Vercel
+   auto-detects Turbo and rewrites the build command to `cd apps/web && bun run build`. Combined with
+   Root Directory = `apps/web` (which *already* makes `apps/web` the working dir), this double-paths
+   and the build fails: `sh: cd: apps/web: No such file or directory`. Setting the build command in
+   project settings does **not** fix it — Turbo auto-detection overrides project settings. The fix is
+   a **`apps/web/vercel.json`**, which is authoritative over auto-detection:
+   ```json
+   { "$schema": "https://openapi.vercel.sh/vercel.json", "framework": "nextjs",
+     "buildCommand": "next build", "installCommand": "bun install" }
+   ```
+4. **Environment variables: none.**
+5. **Deploy** → note the URL (e.g. `https://<project>.vercel.app`).
+6. Point Stripe redirects + the 402 CTA at it (step 2): set `WORKSTATION_BASE_URL` on dev + prod.
+7. **Do NOT** add a `vercel.json` *rewrite* to `*.convex.site` — clients hit Convex directly. (The
+   `vercel.json` above only sets build commands; it adds no rewrites.)
+
+> **Deployment protection:** Vercel's default (`all_except_custom_domains`) gates the random
+> `*.vercel.app` deployment URLs but leaves **custom domains public** — so a `401` on the generated
+> deployment URL is expected while `example.com` serves publicly.
+>
+> **Programmatic alternative (no dashboard):** the whole project — create, Git-connect, set root dir,
+> deploy, add domains — can be driven with the Vercel CLI (`vercel`) or REST API
+> (`POST /v10/projects` with `gitRepository` + `rootDirectory`, `POST /v13/deployments`,
+> `POST /v10/projects/{id}/domains`) using a `VERCEL_TOKEN`. Poll `GET /v6/domains/{domain}/config`
+> → `misconfigured: false` to confirm DNS. (The `vercel.json` above is still required for the build.)
 
 ---
 
@@ -165,9 +185,23 @@ gateway directly from Convex.
 
 ### 5b. Frontend → `example.com` / `www`
 
-Vercel project → **Settings → Domains** → add `example.com` (and `www`). Vercel shows the records to
-create; add them in **Cloudflare → DNS**. DNS-only is simplest; if you proxy (orange cloud), set
-Cloudflare **SSL/TLS** mode to **Full (strict)**. Then update `WORKSTATION_BASE_URL` to the apex.
+Add `example.com` and `www.example.com` to the Vercel project (**Settings → Domains**, or
+`POST /v10/projects/{id}/domains`) — they verify automatically if the domain isn't on another Vercel
+account. Then add **two CNAME records** in **Cloudflare → DNS**:
+
+| Type | Name | Target | Proxy |
+|---|---|---|---|
+| CNAME | `example.com` (apex / `@`) | `cname.vercel-dns.com` *(or the project-specific `<hash>.vercel-dns-NNN.com` Vercel shows)* | **DNS only (grey cloud)** |
+| CNAME | `www` | same target | **DNS only (grey cloud)** |
+
+- **Grey cloud (DNS only) is required for Vercel** so Vercel terminates TLS and can mint the cert.
+  This is the **opposite** of the R2 `cdn.` domain in step 3, which **is** Cloudflare-proxied (orange) —
+  that's correct for R2. (Same pattern as the Convex API domains in 5a: grey cloud.)
+- Cloudflare **flattens the apex CNAME**, so a CNAME at the root is valid.
+- Vercel auto-detects within ~1 minute and mints the TLS cert. The first HTTPS request may fail
+  (curl returns `000` / TLS handshake error) **while the cert provisions** — wait a minute, then it
+  serves `200`.
+- Finally set `WORKSTATION_BASE_URL` to the apex (step 2).
 
 ---
 
@@ -177,6 +211,7 @@ Cloudflare **SSL/TLS** mode to **Full (strict)**. Then update `WORKSTATION_BASE_
 curl https://api.example.com/v1/health        # prod  → {sandbox, filesystem, ... not "mock"}
 curl https://api-dev.example.com/v1/health     # dev
 curl https://cdn.example.com/<a-known-key>     # R2 object served over the CDN domain (HTTP 200)
+curl -I https://example.com                    # frontend → HTTP 200, `server: Vercel` (000 until cert mints)
 ```
 
 Mint keys and go: `npx convex run --prod accounts:mintKey '{"label":"customer","creditsCents":5000}'`.
@@ -187,8 +222,14 @@ Mint keys and go: `npx convex run --prod accounts:mintKey '{"label":"customer","
 
 - **`npx convex deploy` (prod) is operator-run** — keep it a deliberate human step, not automation.
 - **Crons** in `convex/crons.ts` start running automatically once deployed.
+- **Vercel auto-deploys** the project's **production branch** (default: the repo's default branch) on
+  every push; pushes to other branches create previews. Set/change it under the project's
+  **Settings → Git** (the API field is read-only on some plans). Because the `vercel.json` build fix
+  must live on whatever branch deploys to production, commit it on your production branch.
 - **Billing:** set `STRIPE_SECRET_KEY` (+ `STRIPE_WEBHOOK_SECRET`) for self-serve top-ups, or grant
   credits manually with `accounts:grantCredits`.
 - Full env reference: [`.env.example`](./.env.example).
 
-**Source:** [Convex — Custom Domains](https://docs.convex.dev/production/custom-domains).
+**Sources:** [Convex — Custom Domains](https://docs.convex.dev/production/custom-domains) ·
+[Vercel — Monorepos](https://vercel.com/docs/monorepos) ·
+[Vercel — Project configuration (`vercel.json`)](https://vercel.com/docs/project-configuration).
