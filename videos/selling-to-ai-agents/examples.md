@@ -2,12 +2,14 @@
 
 Three stories. Each one shows the same thing twice: **what your customer
 experiences** when they buy through an agent, and then **what that looks like from
-your side of the counter** — because that second part is the one that should keep
-you up at night.
+your side of the counter** — because that second part is where the opportunity is
+hiding.
 
-The whole point: your customer's buying experience is moving into a room you're not
-in. And when you lose, you lose *silently* — no bounce, no abandoned cart, no lead
-that got away. You just quietly stop being in the running.
+The whole point: there's a brand-new way your customers are starting to buy — in a
+conversation with their agent — and almost no business is set up to be the one that
+gets picked. That's not a threat; that's an empty shelf. The first business in each
+category that's easy for an agent to find, answer, and buy from gets a new stream of
+customers its competitors can't even see yet.
 
 ---
 
@@ -37,12 +39,12 @@ hero video, your reviews, the 10%-off popup you A/B tested for a month — never
 The customer's experience of "shopping for shoes" happened entirely inside a chat you
 have no window into.
 
-Now the part that stings: if your store *made* that short list, you got the sale and
-never lifted a finger. If it didn't — and a couple of stores that probably had the
-right shoe *didn't* — there's no trace of it. No visit in your analytics. No cart to
-recover. No "almost." Your dashboard looks like a normal Wednesday. You weren't
-beaten on price or product. **You just weren't in the conversation, and nothing told
-you.**
+Here's the opportunity in that: if your store *made* that short list, you got the
+sale and never lifted a finger — a customer who'd never have found you the old way.
+And the bar to make the list is low: a couple of stores that probably had the right
+shoe *didn't* make it, just because the agent couldn't get a straight answer out of
+them. That's an empty slot. **The store that's easy for an agent to read and buy from
+is the one that gets a customer it never had to advertise to.**
 
 ---
 
@@ -62,16 +64,16 @@ vendor. They never saw a demo. They never talked to anyone.**
 
 ### From your side of the counter
 
-This is your customer's purchase — and the entire thing you built your funnel around
-just got skipped. The landing page, the feature comparison, the 14-day trial, the
-"book a demo" CTA, the nurture sequence — all of it is choreography for a human who
-never showed up. An agent walked in instead, and the moment it hit your signup wall or
-your "contact sales for API access," it turned around.
+This is a *new* kind of purchase your funnel was never built to catch — an agent
+adopting your tool mid-task, for pennies, to get its human unstuck. The landing page,
+the 14-day trial, the "book a demo" CTA were all choreography for a human evaluating
+a big decision. This buyer isn't doing that. It just wants to call your API and pay.
 
-You didn't get a trial signup that went cold. You didn't get a demo no-show. You got
-**nothing** — because the agent's whole evaluation, the part where it decided you were
-too much friction to bother with, took half a second and left no footprint. The
-"better" product loses here all the time, and the founder never finds out why.
+And that's the easy win: the moment your service lets an agent sign up and pay
+programmatically — no wall, no sales call — you start capturing a stream of tiny,
+high-margin, zero-touch sales that the "better," demo-gated competitor literally
+can't accept. Being adoptable in half a second is the whole edge, and almost nobody
+has done it yet.
 
 ---
 
@@ -96,11 +98,13 @@ is usually the call. "Let's hop on a quick 30 to see if we're a fit" — that's 
 you win people, with your warmth, your insight, your read of the room.
 
 An agent never gets on that call. To an agent on a deadline, "let's hop on a call" is
-a dead end — no deliverable, no price, no clock, nothing to act on — so it scrolls
-right past you to the person whose offer it could actually *read.* The more talented
-coach loses to the more legible one. And again: no inquiry, no "I'll think about it,"
-no ghosted email. **Your calendar just stays a little emptier than it should, with no
-reason attached.**
+a dead end — no deliverable, no price, no clock, nothing to act on. So here's the
+opening: the moment you publish one clear, bookable offer — deliverable, price,
+turnaround, proof — you become the coach an agent *can* book, and you start getting
+clients who never would have sat through a discovery call to find you. You still get
+the human relationship — at delivery, where it matters. **A legible offer is a new
+intake channel that fills your calendar while you sleep, and your competitors are
+still saying "let's hop on a call."**
 
 ---
 
@@ -110,18 +114,19 @@ None of this is sci-fi. It's just *how people already shop* — react to a short
 bail on anything that makes you work, pick the one that gives straight answers —
 except now an agent does the legwork, in a conversation you can't see.
 
-For you, the business owner, that means three things change at once:
+For you, the business owner, that means three new openings:
 
-1. **Your storefront isn't your storefront anymore.** The customer's experience is
-   the chat with their agent. Your site is just one source the agent may or may not
-   bother to read.
-2. **Being the best stops being enough.** The agent picks the one it can get a
-   straight answer out of and actually buy from — not the one with the nicest brand.
-3. **Losing went invisible.** No bounce, no abandoned cart, no cold lead. You don't
-   get told you lost. You just quietly stop showing up in your customers' results.
+1. **A new front door just appeared.** Alongside your site, there's now a chat where
+   your customers' agents shop. It's a new way to get found — and barely anyone is
+   showing up there.
+2. **You don't have to be the biggest to get picked.** The agent chooses the one it
+   can get a straight answer out of and actually buy from. Clarity beats brand here,
+   which is great news if you're not the household name.
+3. **The slot is empty.** In almost every category, no one is agent-ready yet. The
+   first business that is gets a stream of customers its competitors can't see.
 
-The good news is the flip side of #2 and #3: the bar to *win* is just being clear and
-buyable — and almost nobody is, yet.
+The whole opportunity in one line: the bar to *win* is just being clear and buyable —
+and almost nobody is, yet.
 
 ---
 
@@ -142,8 +147,9 @@ Watch for the moment it gets stuck:
 - Can it actually *buy*, or does it hit a signup wall, a "contact sales," a "book a
   call," a cart that needs a human?
 
-Wherever it stalls is exactly where your real customers' agents are stalling right
-now — silently, with no trace in your analytics. That stall *is* the lost sale. You
-just got to watch one happen for the first time.
+Wherever it stalls is exactly the opening — the spot where, if you fix it, you become
+the business an agent can actually pick. Every stall is a customer you *could* be
+winning that nobody in your category is set up to win yet.
 
-Do this once and the rest of this isn't a theory anymore. It's a to-do list.
+Do this once and the rest of this isn't a theory anymore. It's a to-do list — and a
+head start.

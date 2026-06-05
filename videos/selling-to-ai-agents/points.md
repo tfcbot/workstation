@@ -50,6 +50,6 @@ that replaces the productivity treadmill.
 9. **Step 1 — go try to buy your own product with an agent.** The single exercise
    that makes all of this real: sit in your customer's chair, tell an agent to buy
    your thing, and watch where it stalls. Wherever it gets stuck — can't find you,
-   can't get a straight answer, can't check out — is a sale you're losing *right
-   now*, silently, with no trace in your analytics. The closing CTA of the video.
-   *(Action)*
+   can't get a straight answer, can't check out — is exactly the opening: fix it and
+   you become the business an agent can pick, in a category where almost nobody is
+   ready yet. The closing CTA of the video. *(Action)*
