@@ -103,6 +103,29 @@ publicUrl(path: string) -> string
 When `opts.public` is set, `write` MUST return a `url` that resolves the object publicly (the CDN
 URL). `publicUrl` MUST be deterministic for a given path.
 
+### 5.3 SDK Injection (composed)
+```
+runWithSdk(code: string) -> { stdout: string, stderr: string, exitCode: int }
+```
+SDK Injection is not a new primitive interface; it is a **composition** of the Sandbox (§5.1), the
+contract SDK derived from the registry (§6), and a scoped credential (§7.1). It runs caller-supplied
+`code` inside the Sandbox with the SDK pre-installed and pre-authed, so the code can call back into
+the gateway as the caller. The mechanism is standard module resolution: the implementation writes the
+SDK bundle to `node_modules/<sdk>/` (with a matching `package.json` `main`) so `import` resolves with
+no install, writes the code, and runs it with the credential supplied via environment.
+
+A conforming implementation MUST:
+- inject a **short-lived credential aliased to the calling account** (§7.1), never a long-lived or
+  bearer-of-record secret, so the executing code holds no durable key;
+- meter every call the injected SDK makes **to the calling account** (resolve the alias before
+  metering, §7.3), at each operation's own cost;
+- forbid recursion: a request authenticated by an injected (aliased/session) credential MUST NOT be
+  able to invoke `runWithSdk` (or an Agent run, §5.1-informative) again, so injected code cannot
+  spawn unbounded nested sandboxes (§8).
+
+The credential's reserved `scopes` (§7.1) MAY narrow what the injected code can reach; an empty scope
+set grants the caller's full capability surface.
+
 ## 6. Operations and the typed contract
 
 The contract is a set of named **operations**. Each operation declares a method, a path, an input
@@ -129,6 +152,7 @@ validate input → run → record an event (§7.3).
 | `PUT /v1/sandbox/files` | Sandbox: write a file (base64) | `200` `{ path }` | `400`,`401`,`402`,`429` |
 | `GET /v1/sandbox/files?path=` | Sandbox: read a file (base64) | `200` `{ data? }` | `401`,`402`,`429` |
 | `POST /v1/sandbox/dispose` | Sandbox: suspend/destroy the VM | `200` `{ ok }` | `401`,`429` |
+| `POST /v1/sandbox/run-with-sdk` | SDK Injection: run code with the pre-authed SDK (§5.3) | `200` ExecResult | `400`,`401`,`402`,`403`,`429` |
 | `PUT /v1/fs/objects` | FileSystem: write object (base64) | `200` `{ path, url? }` | `400`,`401`,`402`,`429` |
 | `GET /v1/fs/objects?path=` | FileSystem: read object (base64) | `200` `{ data? }` | `401`,`402`,`429` |
 | `GET /v1/fs/list?prefix=` | FileSystem: list paths | `200` `{ paths }` | `401`,`429` |
@@ -186,6 +210,12 @@ metering, so a throttled call does not consume credits.
 - **Sandbox isolation.** Unrestricted execution MUST be isolated from the Principal's real
   accounts.
 - **Self-crediting.** The credit-grant seam (§7.3) MUST NOT be reachable by the spending caller.
+- **Injected credentials are short-lived and aliased.** The credential placed in an SDK-injected
+  sandbox (§5.3) MUST be a short-lived key aliased to the caller's account, holding no balance of its
+  own; metering resolves through the alias to the caller. A long-lived or bearer-of-record key MUST
+  NOT be exposed to executing code.
+- **No nested injection.** A request authenticated by an injected (aliased/session) credential MUST
+  NOT be able to start another SDK-injected sandbox or Agent run, bounding recursion (§5.3).
 - **Scheduling, memory, and task tracking are out of scope.** They belong to the Agent (the
   brain), not the workstation; an implementation MUST NOT need them to conform.
 
