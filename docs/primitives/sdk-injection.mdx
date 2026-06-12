@@ -1,0 +1,90 @@
+---
+title: "SDK Injection"
+description: "Run code inside the sandbox with the Workstation SDK pre-installed and pre-authed, so it can call back into every capability — billed to you."
+---
+
+**SDK Injection** is the seam that lets code running *inside* your sandbox call *back out* to the
+Workstation gateway. It composes the [Computer](/primitives/computer) primitive with the generated
+SDK and a short-lived, scoped credential, so a snippet can do:
+
+```js
+import { createClient } from "workstation";
+const ws = createClient();           // already authed — no key in the code
+await ws.fsWrite({ path: "title.txt", data: "…" });
+```
+
+and every call it makes is metered to **your** account. This is the primitive the
+[Agent](/primitives/agent) loop is built on — `POST /v1/agent` is "an LLM that calls this in a loop."
+
+```http
+POST /v1/sandbox/run-with-sdk
+{ "code": "import { createClient } from 'workstation'; const ws = createClient(); console.log(await ws.accountGetBalance({}));" }
+```
+
+Returns:
+
+```json
+{ "stdout": "{ creditsCents: 4200 }\n", "stderr": "", "exitCode": 0 }
+```
+
+- `code` (required) — JavaScript/TypeScript run with `node`. The `workstation` package is already on
+  disk and pre-authed; `import { createClient } from "workstation"` resolves with no install.
+
+## How the injection works
+
+Three things are written into your account's persistent sandbox before your code runs, and the whole
+trick rides on standard Node module resolution:
+
+1. **The SDK bundle** → `node_modules/workstation/index.mjs` (the entire client compiled to one file)
+   plus a matching `package.json` (`main: "index.mjs"`). Because it lives at `node_modules/workstation/`,
+   `import "workstation"` resolves — no `npm install`, no network.
+2. **Your code** → `agent_main.mjs`.
+3. **A credential, via env** — the gateway mints a **short-lived (~10 min) session key aliased to your
+   account** and passes it on the command line as `WORKSTATION_API_KEY`, alongside `WORKSTATION_API_URL`
+   (the gateway's own base URL). The SDK's `createClient()` reads both from the environment.
+
+```
+WORKSTATION_API_KEY="<minted session key>" WORKSTATION_API_URL="<gateway>" node agent_main.mjs
+```
+
+Every SDK call your code makes is an ordinary HTTPS request back to the gateway carrying that session
+key. The gateway resolves the key through its alias to your real account, so the spend lands on you —
+but the box only ever holds a 10-minute, scope-limited token, never a long-lived secret.
+
+```
+You          Gateway              Sandbox (your VM)        Your code + injected SDK
+ │  run-with-sdk  │                      │                          │
+ ├───────────────►│ mint session key     │                          │
+ │                │  (alias → you, 10m)  │                          │
+ │                ├─ writeFiles ────────►│ node_modules/workstation │
+ │                │  + agent_main.mjs    │ agent_main.mjs           │
+ │                ├─ run: KEY/URL env ──►│ node agent_main.mjs ────►│ import { createClient }
+ │                │                      │                          │   from "workstation"
+ │                │  fsWrite(...)  Bearer <session key>             │
+ │                │◄──────────────────────────────────────────────┤ ws.fsWrite(...)
+ │                │ resolve alias → you  │                          │
+ │                │ meter spend → you    │                          │
+ │                ├──────────────────────────────────────────────►│ result
+ │                │  stdout/stderr/exit ◄│ (process exits)          │
+ │   response  ◄──┤                      │                          │
+```
+
+## Safety model
+
+- **No long-lived secret in the box.** The injected credential is a session key that expires (~10 min)
+  and is aliased to your account; it carries no balance of its own.
+- **Metered to the caller.** SDK calls resolve through the alias to your real account, so they debit
+  your credits at each operation's own cost — exactly as if you'd called them directly.
+- **No recursion.** A session key may call every other capability (that's the point) but **may not**
+  start another SDK-injected sandbox or agent run, so code can't spawn unbounded nested boxes.
+
+## Billing
+
+`POST /v1/sandbox/run-with-sdk` is metered at **15 credits** per run. Any SDK calls the code makes
+back into the gateway (e.g. `fsWrite`, `sandboxExec`) are metered separately at their own per-op cost.
+
+If you want an LLM to plan and write the code for you instead of supplying it yourself, use
+[`POST /v1/agent`](/primitives/agent), which wraps this primitive in a planning loop for a flat
+50-credit orchestration fee on top of the per-run cost.
+
+See the [API Reference](/api-reference) for full schemas.
